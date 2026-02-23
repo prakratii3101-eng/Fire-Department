@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Officer Dashboard | Fire Dept</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <span class="brand-icon">🔥</span>
+        <div>
+            <div class="brand-name">Fire Department</div>
+            <div class="brand-sub">Officer Portal</div>
+        </div>
+    </div>
+    <nav>
+        <div class="nav-section">
+            <p class="nav-label">Command</p>
+            <a href="{{ url_for('officer_dashboard') }}" class="nav-item active">
+                <span class="nav-icon">⚡</span> Dashboard
+            </a>
+            <a href="{{ url_for('alerts_page') }}" class="nav-item">
+                <span class="nav-icon">🚨</span> Live Alerts
+                {% if offline_devices + expiring_nocs > 0 %}
+                <span class="nav-badge">{{ offline_devices + expiring_nocs }}</span>
+                {% endif %}
+            </a>
+        </div>
+        <div class="nav-section">
+            <p class="nav-label">Operations</p>
+            <a href="{{ url_for('application_queue') }}" class="nav-item">
+                <span class="nav-icon">📋</span> Application Queue
+                {% if pending_count > 0 %}
+                <span class="nav-badge">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('officer_inspections') }}" class="nav-item">
+                <span class="nav-icon">🔍</span> Inspections
+                {% if todays_inspections > 0 %}
+                <span class="nav-badge">{{ todays_inspections }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('officer_analytics') }}" class="nav-item">
+                <span class="nav-icon">📊</span> Analytics
+            </a>
+        </div>
+        <div class="nav-section">
+            <p class="nav-label">Communication</p>
+            <!-- ✅ FIXED: was href="#" -->
+            <a href="{{ url_for('officer_messages') }}" class="nav-item">
+                <span class="nav-icon">💬</span> Messages
+                {% if unread_messages > 0 %}
+                <span class="nav-badge urgent">{{ unread_messages }}</span>
+                {% endif %}
+            </a>
+        </div>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+</aside>
+
+
+<main class="main-content">
+
+    <div class="page-header">
+        <div>
+            <h2>Command Centre</h2>
+            <p>Real-time overview of fire safety compliance operations.</p>
+        </div>
+        <div class="header-meta">
+            <span class="live-dot"></span>
+            <span id="liveClock" style="font-size:13px;color:var(--text-secondary);font-family:'DM Sans',sans-serif;"></span>
+        </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-pending">
+            <div class="kpi-icon">⏳</div>
+            <div class="kpi-value">{{ pending_count }}</div>
+            <div class="kpi-label">Pending Applications</div>
+            <a href="{{ url_for('application_queue') }}?status=Pending" class="kpi-link">Review queue →</a>
+        </div>
+        <div class="kpi-card kpi-approved">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-value">{{ approved_count }}</div>
+            <div class="kpi-label">Approved This Period</div>
+            <a href="{{ url_for('application_queue') }}?status=Approved" class="kpi-link">View all →</a>
+        </div>
+        <div class="kpi-card kpi-rejected">
+            <div class="kpi-icon">❌</div>
+            <div class="kpi-value">{{ rejected_count }}</div>
+            <div class="kpi-label">Rejected</div>
+            <a href="{{ url_for('application_queue') }}?status=Rejected" class="kpi-link">View all →</a>
+        </div>
+        <div class="kpi-card kpi-inspection">
+            <div class="kpi-icon">📅</div>
+            <div class="kpi-value">{{ todays_inspections }}</div>
+            <div class="kpi-label">Today's Inspections</div>
+            <a href="{{ url_for('officer_inspections') }}" class="kpi-link">View schedule →</a>
+        </div>
+        <div class="kpi-card kpi-alert {% if offline_devices > 0 %}kpi-danger{% endif %}">
+            <div class="kpi-icon">📡</div>
+            <div class="kpi-value">{{ offline_devices }}</div>
+            <div class="kpi-label">Offline IoT Devices</div>
+            <a href="{{ url_for('alerts_page') }}" class="kpi-link">View alerts →</a>
+        </div>
+        <div class="kpi-card kpi-noc {% if expiring_nocs > 0 %}kpi-warn{% endif %}">
+            <div class="kpi-icon">📋</div>
+            <div class="kpi-value">{{ expiring_nocs }}</div>
+            <div class="kpi-label">NOCs Expiring (30 days)</div>
+            <a href="{{ url_for('alerts_page') }}" class="kpi-link">Check now →</a>
+        </div>
+    </div>
+
+    <!-- Quick nav panels -->
+    <div class="quick-panels">
+        <a href="{{ url_for('application_queue') }}" class="quick-panel">
+            <span class="qp-icon">📋</span>
+            <div>
+                <div class="qp-title">Application Queue</div>
+                <div class="qp-sub">Review, approve & assign pending NOC requests</div>
+            </div>
+            <span class="qp-arrow">→</span>
+        </a>
+        <a href="{{ url_for('alerts_page') }}" class="quick-panel">
+            <span class="qp-icon">🚨</span>
+            <div>
+                <div class="qp-title">Live Alert Feed</div>
+                <div class="qp-sub">IoT failures, SLA breaches, NOC expirations</div>
+            </div>
+            <span class="qp-arrow">→</span>
+        </a>
+        <a href="{{ url_for('officer_inspections') }}" class="quick-panel">
+            <span class="qp-icon">🔍</span>
+            <div>
+                <div class="qp-title">Inspections</div>
+                <div class="qp-sub">Today's schedule, update results & scores</div>
+            </div>
+            <span class="qp-arrow">→</span>
+        </a>
+        <a href="{{ url_for('officer_analytics') }}" class="quick-panel">
+            <span class="qp-icon">📊</span>
+            <div>
+                <div class="qp-title">Analytics</div>
+                <div class="qp-sub">Compliance rates, officer stats, fee summary</div>
+            </div>
+            <span class="qp-arrow">→</span>
+        </a>
+        <!-- ✅ Messages quick panel -->
+        <a href="{{ url_for('officer_messages') }}" class="quick-panel">
+            <span class="qp-icon">💬</span>
+            <div>
+                <div class="qp-title">Messages</div>
+                <div class="qp-sub">View and reply to applicant messages{% if unread_messages > 0 %} · {{ unread_messages }} unread{% endif %}</div>
+            </div>
+            <span class="qp-arrow">→</span>
+        </a>
+    </div>
+
+</main>
+
+<script>
+function updateClock() {
+    const now = new Date();
+    document.getElementById('liveClock').textContent =
+        now.toLocaleString('en-IN', { weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
