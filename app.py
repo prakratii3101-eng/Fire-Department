@@ -20,10 +20,11 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 # ─────────────────────────────────────────────
 def get_db():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Root",
-        database="fire"
+        host=os.environ.get("MYSQLHOST"),
+        port=int(os.environ.get("MYSQLPORT", 3306)),
+        user=os.environ.get("MYSQLUSER"),
+        password=os.environ.get("MYSQLPASSWORD"),
+        database=os.environ.get("MYSQLDATABASE")
     )
 
 # Alias so admin routes work without changes
